@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<settings>
+	<setting label="URL" type="text" id="url_address" default="http://eztvapi.re"/>
+	<setting label="Quality Tv Shows" type="lsep"/>
+	<setting label="480p" type="bool" id="TV_q1" default="false"/>
+	<setting label="720p" type="bool" id="TV_q2" default="true"/>
+</settings>
