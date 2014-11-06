@@ -1,5 +1,4 @@
 from pulsar import provider
-import json
 
 url_address = provider.ADDON.getSetting('url_address')
 icon = provider.ADDON.getAddonInfo('icon') # gets icon
@@ -31,14 +30,17 @@ def search_episode(info):
 	response = provider.GET(url)
 	results=[]
 	if  str(response.data)!='':
-		items= json.loads(response.data)
+		items = provider.parse_json(response.data)
 		for episode in items['episodes']:
 			if (episode['episode']==info['episode'] and episode['season']==info['season']):
 				for resolution in episode['torrents']:
 					resASCII =resolution.encode('utf-8')
+					name = resASCII + ' - ' + items['title'] + ' - ' + episode['title']
 					if included(resASCII, TV_allow) and not included(resASCII, TV_deny):
 						res_val=values3[resASCII]
-						results.append({'name': resASCII + ' - ' + items['title'] + ' - ' + episode['title'] + ' - EZTVapi Provider', 'uri': episode['torrents'][resolution]['url'],'resolution' : res_val})
+						results.append({'name': name + ' - EZTVapi Provider', 'uri': episode['torrents'][resolution]['url'],'resolution' : res_val})
+					else:
+						provider.log.warning(name + '   ***Not Included for keyword filtering or size***')
 	return results
 	
 def search_movie(info):
