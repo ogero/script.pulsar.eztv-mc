@@ -27,9 +27,12 @@ def search_episode(info):
 	title= ' S%02dE%02d' % (info['episode'],info['season'])
 	provider.notify(message='Searching: ' + info['title'].upper()  + title +'...', header=None, time=1500, image=icon)
 	url = str(url_address) + "/show/" + info['imdb_id']
+	provider.log.info(url)
 	response = provider.GET(url)
 	results=[]
 	if  str(response.data)!='':
+		provider.log.info('Keywords allowed: ' + str(TV_allow))
+		provider.log.info('Keywords denied: ' + str(TV_deny))
 		items = provider.parse_json(response.data)
 		for episode in items['episodes']:
 			if (episode['episode']==info['episode'] and episode['season']==info['season']):
