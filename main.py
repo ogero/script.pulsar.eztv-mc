@@ -25,7 +25,7 @@ def search(info):
 
 def search_episode(info):
 	title= ' S%02dE%02d' % (info['episode'],info['season'])
-	provider.notify(message='Searching: ' + info['title'].upper()  + title +'...', header=None, time=1500, image=icon)
+	provider.notify(message='Searching: ' + info['title'].title()  + title +'...', header=None, time=1500, image=icon)
 	url = str(url_address) + "/show/" + info['imdb_id']
 	provider.log.info(url)
 	response = provider.GET(url)
