@@ -1,55 +1,46 @@
 from pulsar import provider
+import common
 
-url_address = provider.ADDON.getSetting('url_address')
-icon = provider.ADDON.getAddonInfo('icon') # gets icon
-name_provider = provider.ADDON.getAddonInfo('name') # gets name
-values3 = {'ALL': 0, 'HDTV': 1,'480p': 1,'DVD': 1,'720p': 2 ,'1080p': 3, '3D': 3, "1440p": 4 ,"2K": 5,"4K": 5} #code_resolution steeve
-#quality_TV
-TV_q1 = provider.ADDON.getSetting('TV_q1') #480p
-TV_q2 = provider.ADDON.getSetting('TV_q2') #720p
-TV_allow = []
-TV_deny = [] 
-TV_allow.append('480p') if TV_q1 == 'true' else TV_deny.append('480p')
-TV_allow.append('720p') if TV_q2 == 'true' else TV_deny.append('720p')
+# this read the settings
+settings = common.Settings()
+# create the filters
+filters = common.Filtering()
 
-# function to validate
-def included(value, keys):
-    res = False
-    for item in keys:
-        if item in value:
-            res = True 
-            break
-    return res
+values3 = {'0': 0, 'HDTV': 1,'480p': 1,'DVD': 1,'720p': 2 ,'1080p': 3, '3D': 3, "1440p": 4 ,"2K": 5,"4K": 5} #code_resolution steeve
 
-def search(info):
-	return []
+
+def search(query):
+    return []
+
 
 def search_episode(info):
-	title= ' S%02dE%02d' % (info['episode'],info['season'])
-	provider.notify(message='Searching: ' + info['title'].title()  + title +'...', header=None, time=1500, image=icon)
-	url_search = "%s/show/%s" % (str(url_address) ,info['imdb_id'])
-	provider.log.info(url_search)
-	response = provider.GET(url_search)
-	results=[]
-	if  str(response.data)!='':
-		provider.log.info('Keywords allowed: ' + str(TV_allow))
-		provider.log.info('Keywords denied: ' + str(TV_deny))
-		items = provider.parse_json(response.data)
-		for episode in items['episodes']:
-			if (episode['episode']==info['episode'] and episode['season']==info['season']):
-				for resolution in episode['torrents']:
-					resASCII =resolution.encode('utf-8')
-					name = resASCII + ' - ' + items['title'] + ' - ' + episode['title']
-					if included(resASCII, TV_allow) and not included(resASCII, TV_deny):
-						res_val=values3[resASCII]
-						results.append({'name': name + ' - ' + name_provider, 'uri': episode['torrents'][resolution]['url'],'resolution' : res_val})
-					else:
-						provider.log.warning(name + '   ***Not Included for keyword filtering or size***')
-	return results
-	
+    title= ' S%02dE%02d' % (info['episode'],info['season'])
+    if settings.time_noti > 0 : provider.notify(message='Searching: ' + info['title'].title()  + title +'...',
+                                                header=None, time=settings.time_noti, image=settings.icon)
+    url_search = "%s/show/%s" % (settings.url ,info['imdb_id'])
+    provider.log.info(url_search)
+    response = provider.GET(url_search)
+    results=[]
+    if  str(response.data)!='':
+        filters.use_TV()
+        filters.information()
+        items = provider.parse_json(response.data)
+        for episode in items['episodes']:
+            if (episode['episode']==info['episode'] and episode['season']==info['season']):
+                for resolution in episode['torrents']:
+                    resASCII =resolution.encode('utf-8')
+                    name = resASCII + ' - ' + items['title'] + ' - ' + episode['title']
+                    if filters.included(resASCII, filters.quality_allow) and not filters.included(resASCII, filters.quality_deny):
+                        res_val=values3[resASCII]
+                        results.append({'name': name + ' - ' + settings.name_provider, 'uri': episode['torrents'][resolution]['url'],'resolution' : res_val})
+                    else:
+                        provider.log.warning(name + ' ***Blocked File by Keyword, Name or Size***')
+    print results
+    return results
+
 def search_movie(info):
-	# not info
-	return []
+    # not info
+    return []
 
 # This registers your module for use
 provider.register(search, search_movie, search_episode)
