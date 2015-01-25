@@ -14,8 +14,8 @@ def search(query):
 
 
 def search_episode(info):
-    title= ' S%02dE%02d' % (info['episode'],info['season'])
-    if settings.time_noti > 0 : provider.notify(message='Searching: ' + info['title'].title()  + title +'...',
+    title_add= ' S%02dE%02d' % (info['season'],info['episode'])
+    if settings.time_noti > 0 : provider.notify(message='Searching: ' + info['title'].title()  + title_add +'...',
                                                 header=None, time=settings.time_noti, image=settings.icon)
     url_search = "%s/show/%s" % (settings.url ,info['imdb_id'])
     provider.log.info(url_search)
@@ -29,7 +29,7 @@ def search_episode(info):
             if (episode['episode']==info['episode'] and episode['season']==info['season']):
                 for resolution in episode['torrents']:
                     resASCII =resolution.encode('utf-8')
-                    name = resASCII + ' - ' + items['title'] + ' - ' + episode['title']
+                    name = resASCII + ' - ' + items['title'] + ' - ' + episode['title'] + ' -' + title_add
                     if filters.included(resASCII, filters.quality_allow) and not filters.included(resASCII, filters.quality_deny):
                         res_val=values3[resASCII]
                         results.append({'name': name + ' - ' + settings.name_provider, 'uri': episode['torrents'][resolution]['url'],'resolution' : res_val})
