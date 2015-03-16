@@ -35,11 +35,7 @@ def search_episode(info):
                         magnet = episode['torrents'][resolution]['url']
                         info_magnet = common.Magnet(magnet)
                         results.append({'name': name + ' - ' + settings.name_provider,
-                                        'uri': magnet,
-                                        "info_hash": info_magnet.hash,
-                                        "language": settings.language,
-                                        "trackers": info_magnet.trackers + settings.trackers,
-                                        'resolution' : res_val})
+                                        'uri': magnet})
                     else:
                         provider.log.warning(name + ' ***Blocked File by Keyword, Name or Size***')
     return results
