@@ -14,7 +14,7 @@ def search(query):
 
 
 def search_episode(info):
-    title= ' S%02dE%02d' % (info['episode'],info['season'])
+    title= ' S%02dE%02d' % (info['season'], info['episode'])
     if settings.time_noti > 0 : provider.notify(message='Searching: ' + info['title'].encode("utf-8").title() +
                                  title +'...', header=None, time=settings.time_noti, image=settings.icon)
     url_search = "%s/show/%s" % (settings.url ,info['imdb_id'])
@@ -33,9 +33,11 @@ def search_episode(info):
                     if filters.included(resASCII, filters.quality_allow) and not filters.included(resASCII, filters.quality_deny):
                         res_val=values3[resASCII]
                         magnet = episode['torrents'][resolution]['url']
-                        info_magnet = common.Magnet(magnet)
-                        results.append({'name': name + ' - ' + settings.name_provider,
-                                        'uri': magnet})
+                        if magnet[:4].lower()=='http':
+                            magnet = common.TorrentToMagnet(magnet,items['title'],info['season'],info['episode'])
+                        if magnet is not None:
+                            info_magnet = common.Magnet(magnet)
+                            results.append({'name': name + ' - ' + settings.name_provider, 'uri': magnet})
                     else:
                         provider.log.warning(name + ' ***Blocked File by Keyword, Name or Size***')
     return results

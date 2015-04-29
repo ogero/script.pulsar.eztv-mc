@@ -3,7 +3,7 @@ __author__ = 'mancuniancol'
 import re 
 import xbmcaddon
 import xbmc
-
+import urllib,bencode,hashlib,base64
 
 class Settings:
     def __init__(self):
@@ -296,7 +296,7 @@ def clean_html(data):
 
 
 # find the name in different language
-def translator(imdb_id, language):
+def translator(imdb_id, language, extra=True):
     import json
     browser1 = Browser()
     keywords = {'en': '', 'de': '', 'es': 'espa', 'fr': 'french', 'it': 'italian', 'pt': 'portug'}
@@ -305,7 +305,7 @@ def translator(imdb_id, language):
         movie = json.loads(browser1.content)
         title = movie['movie_results'][0]['title'].encode('utf-8')
         original_title = movie['movie_results'][0]['original_title'].encode('utf-8')
-        if title == original_title:
+        if title == original_title and extra:
             title += ' ' + keywords[language]
     else:
         title = 'Pas de communication avec le themoviedb.org'
@@ -334,6 +334,7 @@ def size_int(size_txt):
 
 class Magnet():
     def __init__(self, magnet):
+        from urllib import unquote_plus
         self.magnet = magnet + '&'
         # hash
         hash = re.search('urn:btih:(.*?)&', self.magnet)
@@ -345,7 +346,7 @@ class Magnet():
         name = re.search('dn=(.*?)&', self.magnet)
         result = ''
         if name is not None:
-                result= name.group(1).replace('+',' ')
+                result= unquote_plus(name.group(1)).replace('.',' ').replace('-', ' ').replace('_', ' ')
         self.name = result.title()
         # trackers
         self.trackers = re.findall('tr=(.*?)&', self.magnet)
@@ -358,3 +359,21 @@ def IMDB_title(IMDB_id):
         data = browser.content.replace('"', '').replace('{', '').replace('}', '').split(',')
         result = data[0].split(":")[1] + ' ' + data[1].split(":")[1]
     return result
+
+def TorrentToMagnet(url,title,season,episode):
+    class MyOpener(urllib.FancyURLopener):
+        version = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36"
+    my_urlopener = MyOpener()
+    content = None
+    try:
+        response = my_urlopener.open(url)
+        content = response.read()
+        metadata = bencode.bdecode(content)
+        hashcontents = bencode.bencode(metadata['info'])
+        digest = hashlib.sha1(hashcontents).digest()
+        hexhash = digest.encode('hex')
+        displayname=urllib.urlencode(u"%s S%02dE%02d"%(title,season,episode))
+        content = u"magnet:?xt=urn:btih:%s&dn=%s"%(hexhash,displayname)
+    except Exception, e:
+        print(u"Failed to convert to magnet %s because %s" % (url,e))
+    return content
